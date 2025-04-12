@@ -1,0 +1,47 @@
+# Python cache and virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+.eggs/
+.env/
+.venv/
+*.sqlite3
+
+# Jupyter and notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Poetry/venv build artifacts
+# poetry.lock
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs and airflow metadata
+logs/
+*.log
+*.pid
+*.db
+
+# VSCode and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Output folders
+output/
+data/
+tmp/
+
+# Git and CI/CD
+.git/
+.gitignore
+.github/
+
+# Docker files that should not be copied into container
+docker-compose.yml
+Dockerfile
