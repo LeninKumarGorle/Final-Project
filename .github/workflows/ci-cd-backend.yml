@@ -37,7 +37,7 @@ jobs:
  
     - name: Build Docker image
       run: |
-        docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} .
+        docker build -t gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }} -f backend/Dockerfile .
         docker push gcr.io/$PROJECT_ID/$SERVICE_NAME:${{ github.sha }}
  
     - name: Deploy to Google Cloud Run
