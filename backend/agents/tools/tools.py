@@ -279,7 +279,7 @@ class FetchRelevantChunksFromPineconeTool(BaseTool):
 
 # ------------------------- LEETCODE SCRAPE TOOL -------------------------
 
-LEETSERVICE = "http://localhost:8010"
+LEETSERVICE = "https://leetscrape-155853387274.us-central1.run.app"
 
 class FetchNextLeetQuestionInput(BaseModel):
     topic: str = Field(..., description="LeetCode topic like array, dp, graph")
