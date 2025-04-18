@@ -45,3 +45,17 @@ tmp/
 # Docker files that should not be copied into container
 docker-compose.yml
 Dockerfile
+
+# Ignore Poetry cache
+poetry.lock.*
+poetry.toml.*
+
+# Ignore Airflow logs and local state
+airflow.db
+airflow.cfg
+dags/__pycache__/
+dags/*.pyc
+dags/logs/
+
+huggingface_cache/
+POC/

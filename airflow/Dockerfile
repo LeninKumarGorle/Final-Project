@@ -22,8 +22,12 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=$POETRY_HOME pytho
 # WORKDIR before install
 WORKDIR /opt/airflow
 
+# Make sure scripts is recognized as a module
+ENV PYTHONPATH="${PYTHONPATH}:/opt/airflow"
+
 # Copy dependency files only
 COPY pyproject.toml poetry.lock ./
+COPY pinecone-sdk /opt/airflow/pinecone-sdk
 
 # Run poetry install BEFORE switching to airflow user
 RUN poetry config virtualenvs.create false \
