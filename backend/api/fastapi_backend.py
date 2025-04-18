@@ -94,7 +94,8 @@ async def analyze_resume(
 
     return JSONResponse(content={
         "summary": summary,
-        "pdf_base64": pdf_bytes.decode("latin1")
+        "pdf_base64": pdf_bytes.decode("latin1"),
+        "markdown_s3_url": result["markdown_s3_url"]
     })
 
 @app.post("/faq")

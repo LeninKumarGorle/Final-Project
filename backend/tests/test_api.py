@@ -9,7 +9,12 @@ client = TestClient(app)
 
 @patch("agents.crew_config.run_oa_session")
 def test_oa_session(mock_oa):
-    mock_oa.return_value = {"response": "ok"}
+    mock_oa.return_value = {
+    "question_text": "mock question",
+    "code_stub": "",
+    "session_state": {}
+    }
+
     payload = {
         "user_input": "hello",
         "code": "print('hi')",
@@ -23,6 +28,8 @@ def test_oa_session(mock_oa):
 @patch("agents.crew_config.run_recommendation_pipeline")
 @patch("utils.pdf_utils.generate_pdf_report_with_details")
 def test_analyze_resume(mock_pdf, mock_pipeline):
+    mock_report = MagicMock()
+    mock_report.raw = "Report content"
     mock_pipeline.return_value = {
         "summary": "Summary here",
         "candidate_name": "John",
@@ -31,7 +38,7 @@ def test_analyze_resume(mock_pdf, mock_pipeline):
         "matched_skills": ["Python"],
         "missing_skills": ["SQL"],
         "match_score": 80,
-        "recommendation_report": type("Rec", (), {"raw": "Report content"})
+        "recommendation_report": mock_report
     }
     mock_pdf.return_value = None
 

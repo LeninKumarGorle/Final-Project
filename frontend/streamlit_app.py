@@ -19,7 +19,7 @@ load_dotenv()
 # ----------------- Configuration -----------------
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
-MAX_QUESTIONS = 3
+MAX_QUESTIONS = 7
 
 # Snowflake credentials from .env
 SNOWFLAKE_CONFIG = {
@@ -36,7 +36,7 @@ ROLES = ["Data Analyst", "Data Engineer", "Software Engineer", "Machine Learning
 COMPANIES = ["Meta", "Apple", "Amazon", "Netflix", "Google"]
 PAGES = ["Home","Prepare for Interview", "Mock Interview", "Q and A"]
 
-FASTAPI_URL = "http://localhost:8000"
+FASTAPI_URL = "https://ai-interview-prep-app-155853387274.us-central1.run.app"
 
 # ----------------- Helpers -----------------
 def hash_password(password):
@@ -390,6 +390,7 @@ def main_app(username):
                     data = call_upload_api(uploaded_file, job_description, location)
                     st.session_state.summary = data.get("summary")
                     st.session_state.pdf_bytes = data["pdf_base64"].encode("latin1")
+                    st.session_state.markdown_s3_url = data.get("markdown_s3_url")
             if st.session_state.summary:
                 st.subheader("Summary")
                 st.success(st.session_state.summary)
@@ -411,7 +412,9 @@ def main_app(username):
                                              [] if key == "interview_transcript" else
                                              False if key in ["interview_started", "interview_done", "oa_state_initialized"] else "")
 
-            resume_s3_path = "s3://team6-final-project/resumes/markdown/FILE_resume.md"
+            resume_s3_path = st.session_state.get("resume_s3_url")
+            if not resume_s3_path:
+                st.warning("Resume not uploaded yet. Please upload your resume in the 'Prepare for Interview' tab.")
             if not st.session_state.interview_started:
                 st.session_state.interview_mode = st.selectbox("Choose Interview Mode", ["Behavioral", "Resume", "Practice OA"], key="mode_selector")
                 st.markdown(f"### You are now starting a **{st.session_state.interview_mode}** interview.")
@@ -652,6 +655,22 @@ def main():
     if token:
         payload = decode_token(token)
         if payload:
+            if "last_active_page" not in st.session_state:
+                st.session_state.last_active_page = None
+            if st.session_state.get("active_page") != st.session_state.last_active_page:
+                if st.session_state.last_active_page == "Prepare for Interview":
+                    for key in ["summary", "pdf_bytes", "resume_s3_url", "pdf_upload"]:
+                        st.session_state.pop(key, None)
+                elif st.session_state.last_active_page == "Mock Interview":
+                    for key in ["interview_mode", "interview_transcript", "interview_started", "interview_done",
+                                "last_question", "evaluation_result", "oa_state_initialized", "topic_selected",
+                                "oa_session_state", "response", "feedback", "code", "started"]:
+                        st.session_state.pop(key, None)
+                elif st.session_state.last_active_page == "Q and A":
+                    for key in ["qa_query", "qa_result"]:
+                        st.session_state.pop(key, None)
+
+                st.session_state.last_active_page = st.session_state.get("active_page")
             main_app(payload["username"])
         else:
             st.error("Session expired.")
