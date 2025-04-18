@@ -85,7 +85,7 @@ https://shorturl.at/shNyk
 
 ## Hosted Applications links 
 
-- Frontend : https://frontend-325254329458.us-central1.run.app
+- Frontend : https://interview-preparation-app.streamlit.app/
 - Backend : https://ai-interview-prep-app-155853387274.us-central1.run.app
 - leetscrape microservice: https://leetscrape-155853387274.us-central1.run.app
 
