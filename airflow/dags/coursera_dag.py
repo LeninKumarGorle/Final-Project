@@ -28,14 +28,14 @@ def scrape_and_load_by_role(**context):
         course["job_role"] = job_role
     
     df  = pd.DataFrame(courses)
-    csv_path = "/opt/airflow/dbt/final_project_pipeline/seeds/raw_courses.csv"
+    csv_path = "/opt/airflow/dbt/course_pipeline/seeds/raw_courses.csv"
     df.to_csv(csv_path, index=False)
 
     print(f"Data saved to {csv_path}")
 
 def cleanup_csv(**context):
     import os
-    csv_path = "/opt/airflow/dbt/final_project_pipeline/seeds/raw_courses.csv"
+    csv_path = "/opt/airflow/dbt/course_pipeline/seeds/raw_courses.csv"
     if os.path.exists(csv_path):
         os.remove(csv_path)
     else:
@@ -56,22 +56,22 @@ with DAG(
 
     dbt_deps_task = BashOperator(
     task_id="dbt_deps",
-    bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt deps --profiles-dir /opt/airflow/dbt/final_project_pipeline"
+    bash_command="cd /opt/airflow/dbt/course_pipeline && poetry run dbt deps --profiles-dir /opt/airflow/dbt/"
     )
 
     dbt_seed_task = BashOperator(
         task_id="dbt_seed",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt seed --profiles-dir /opt/airflow/dbt/final_project_pipeline"
+        bash_command="cd /opt/airflow/dbt/course_pipeline && poetry run dbt seed --profiles-dir /opt/airflow/dbt/"
     )
 
     dbt_test_task = BashOperator(
         task_id="dbt_test",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt test --profiles-dir /opt/airflow/dbt/final_project_pipeline"
+        bash_command="cd /opt/airflow/dbt/course_pipeline && poetry run dbt test --profiles-dir /opt/airflow/dbt/"
     )
 
     dbt_run_task = BashOperator(
         task_id="dbt_run",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt run --profiles-dir /opt/airflow/dbt/final_project_pipeline"
+        bash_command="cd /opt/airflow/dbt/course_pipeline && poetry run dbt run --profiles-dir /opt/airflow/dbt/"
     )
 
     delete_csv = PythonOperator(
@@ -82,7 +82,3 @@ with DAG(
 
     # Set task dependencies
     scrape_task >> dbt_deps_task >> dbt_seed_task >> dbt_run_task >> dbt_test_task >> delete_csv
-    
-    
-    
-    
