@@ -2,10 +2,10 @@
 # import os
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from agents.crew_config import run_oa_session, run_recommendation_pipeline
+from agents.crew_config import run_oa_session, run_recommendation_pipeline, run_faq_pipeline
 from utils.pdf_utils import generate_pdf_report_with_details
 import io
 
@@ -16,6 +16,11 @@ class OASessionRequest(BaseModel):
     code: str | None = None
     problem: str | None = None
     session_state: dict = {}
+
+class FAQRequest(BaseModel):
+    query: str
+    role: str
+    company: str
 
 @app.post("/oa-session")
 def oa_session(request: OASessionRequest):
@@ -68,3 +73,19 @@ async def analyze_resume(
         "summary": summary,
         "pdf_base64": pdf_bytes.decode("latin1")
     })
+
+@app.post("/faq")
+def get_faq_answer(req: FAQRequest):
+    try:
+        result = run_faq_pipeline(
+            faq_query=req.query,
+            job_role=req.role,
+            company=req.company
+        )
+
+        if result.get("status") == "error":
+            raise HTTPException(status_code=400, detail=result.get("message", "Request failed."))
+        
+        return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
