@@ -1,4 +1,5 @@
 from crewai.tools import BaseTool
+from openai import OpenAI
 from pydantic import BaseModel, Field
 import requests
 import snowflake.connector
@@ -134,3 +135,90 @@ class WebSearchTool(BaseTool):
             return "\n".join([f"{r['title']}: {r['url']}" for r in results])
         except Exception as e:
             return f"Tavily search failed: {str(e)}"
+
+# ------------------------- LEETCODE SCRAPE TOOL -------------------------
+
+LEETSERVICE = "http://localhost:8010"
+
+class FetchNextLeetQuestionInput(BaseModel):
+    topic: str = Field(..., description="LeetCode topic like array, dp, graph")
+    index: int = Field(default=0, description="Index of the question to fetch")
+
+class FetchNextLeetQuestionTool(BaseTool):
+    name: str = "fetch_next_leet_question"
+    description: str = "Fetch a LeetCode question from leetscrape microservice"
+    args_schema: type[BaseModel] = FetchNextLeetQuestionInput
+
+    def _run(self, topic: str, index: int = 0) -> str:
+        try:
+            res = requests.get(f"{LEETSERVICE}/questions/{topic}")
+            print(res.status_code, res.text)
+            if res.status_code != 200:
+                return f"Failed to fetch questions for topic '{topic}'"
+
+            questions = res.json().get("questions", [])
+            print(res.json())
+            if not questions or index >= len(questions):
+                return f"No questions found for topic '{topic}' at index {index}"
+
+            q = questions[index]
+            slug = q["titleSlug"]
+            detail = requests.get(f"{LEETSERVICE}/question-detail/{slug}").json()
+
+            return {
+                "question_text": (
+                    f"### {detail.get('title', 'Unknown')} ({detail.get('difficulty', '')})\n\n"
+                    f"https://leetcode.com/problems/{slug}/\n\n"
+                    f"**Topics:** {', '.join(detail.get('topics', []))}\n\n"
+                    f"{detail.get('description', 'No description available.')}"
+                ),
+                "code_stub": detail.get("code_stub", "# Starter code not available.")
+            }
+        except Exception as e:
+            return f"Error fetching question: {str(e)}"
+
+# ------------------------- CODE FEEDBACK TOOL -------------------------
+
+class CodeFeedbackInput(BaseModel):
+    problem: str = Field(..., description="Problem description")
+    code: str = Field(..., description="Python code string")
+
+class CodeFeedbackTool(BaseTool):
+    name: str = "get_code_feedback"
+    description: str = "Feedback on submitted code"
+    args_schema: type[BaseModel] = CodeFeedbackInput
+
+    def _run(self, problem: str, code: str) -> str:
+        openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+        prompt = f"""
+You are a coding interview assistant.
+
+Evaluate the following code based on this problem statement:
+
+---
+PROBLEM:
+{problem}
+
+CODE:
+```python
+{code}
+```
+
+1. Does the code correctly solve the problem? Justify your answer.
+2. What is the time complexity? Explain how you derived it.
+3. What is the space complexity? Explain why.
+4. Suggest improvements or optimizations if any.
+
+Return your answer in a clear, structured markdown format.
+"""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4
+        )
+
+        return response.choices[0].message.content.strip()

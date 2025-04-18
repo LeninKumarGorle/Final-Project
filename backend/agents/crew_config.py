@@ -5,6 +5,9 @@ from data_processing.resume_processing import process_pdf
 from data_processing.skill_matcher import extract_jd_skills_with_openai, compare_skills
 from dotenv import load_dotenv
 
+from agents.tools.tools import CodeFeedbackInput, CodeFeedbackTool, FetchNextLeetQuestionInput, FetchNextLeetQuestionTool
+from agents.leetscrape_agent import oa_leetscrape_agent
+
 load_dotenv()
 
 session_state = {}
@@ -64,4 +67,75 @@ def run_recommendation_pipeline(file_content: bytes, file_name: str, job_descrip
         return {
             "status": "error",
             "message": str(e)
+        }
+
+def run_oa_session(user_input: str, code: str = None, problem: str = None, state: dict = None):
+    session_state = state or {}
+
+    # Step 1: New session or topic restart → force reset and return first question
+    if user_input.lower() in [
+        "array", "string", "dp", "graph", "tree", "stack", "queue",
+        "hash-table", "greedy", "two-pointers", "sliding-window", "linked-list"]:
+
+        session_state["topic"] = user_input.lower()
+        session_state["index"] = 0
+        session_state["state"] = "waiting_for_code"
+        session_state["skipped"] = []
+
+        tool = FetchNextLeetQuestionTool()
+        input_data = FetchNextLeetQuestionInput(topic=session_state["topic"])
+        q = tool._run(**input_data.model_dump())
+
+        question_text = q.get("question_text") if isinstance(q, dict) else str(q)
+        code_stub = q.get("code_stub") if isinstance(q, dict) else ""
+
+        return {
+            "question_text": question_text,
+            "code_stub": code_stub,
+            "session_state": session_state
+        }
+    
+    elif code and session_state.get("topic") and session_state.get("index") is not None:
+        session_state["state"] = "waiting_for_next"
+
+        problem = problem or "Problem not provided"
+        print(problem,"Here\n\n\n")
+
+        tool = CodeFeedbackTool()
+        input_data = CodeFeedbackInput(problem=problem, code=code)
+        feedback = tool._run(**input_data.model_dump())
+
+        return {
+            "question_text": feedback + "\n\n Type 'next' to try another question.",
+            "code_stub": code,
+            "session_state": session_state
+        }
+    
+    elif user_input.strip().lower() == "next":
+        if session_state.get("state") == "waiting_for_code":
+            session_state.setdefault("skipped", []).append(session_state.get("index", 0))
+
+        session_state["index"] = session_state.get("index", 0) + 1
+        session_state["state"] = "waiting_for_code"
+
+        tool = FetchNextLeetQuestionTool()
+        input_data = FetchNextLeetQuestionInput(
+            topic=session_state["topic"],
+            index=session_state["index"]
+        )
+        q = tool._run(**input_data.model_dump())
+
+        question_text = q.get("question_text") if isinstance(q, dict) else str(q)
+        code_stub = q.get("code_stub") if isinstance(q, dict) else ""
+
+        return {
+            "question_text": question_text,
+            "code_stub": code_stub,
+            "session_state": session_state
+        }
+    else:
+        return {
+            "question_text": "Please provide a code answer or type 'next' for another question.",
+            "code_stub": "",
+            "session_state": session_state
         }

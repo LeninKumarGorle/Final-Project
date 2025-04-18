@@ -4,11 +4,34 @@
 
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import JSONResponse
-from agents.crew_config import run_recommendation_pipeline
+from pydantic import BaseModel
+from agents.crew_config import run_oa_session, run_recommendation_pipeline
 from utils.pdf_utils import generate_pdf_report_with_details
 import io
 
 app = FastAPI()
+
+class OASessionRequest(BaseModel):
+    user_input: str
+    code: str | None = None
+    problem: str | None = None
+    session_state: dict = {}
+
+@app.post("/oa-session")
+def oa_session(request: OASessionRequest):
+    print("USER INPUT:", request.user_input)
+    print("SESSION STATE:", request.session_state)
+    print("CODE:", request.code)
+
+    response = run_oa_session(
+        user_input=request.user_input,
+        code=request.code,
+        problem=request.problem,
+        state=request.session_state
+    )
+
+    print("RETURNING:", response)
+    return JSONResponse(content=response)
 
 @app.post("/analyze-resume/")
 async def analyze_resume(
