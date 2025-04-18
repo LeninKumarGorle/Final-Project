@@ -31,3 +31,5 @@ debug.log
 .aws/
 
 profiles.yml
+
+poetry.lock
