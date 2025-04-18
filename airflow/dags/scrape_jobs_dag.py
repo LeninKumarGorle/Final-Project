@@ -10,7 +10,6 @@ import os
 from scripts.linkedin_job_scraper import scrape_jobs_for_role
 
 def scrape_and_save(**context):
-    # role = context['params'].get("job_role", "Data Scientist")
     role = context['dag_run'].conf.get("job_role", "Data Scientist") 
     df = scrape_jobs_for_role(role)
 
@@ -23,15 +22,15 @@ def scrape_and_save(**context):
             "Description": "description",
             "Role": "role"
         }, inplace=True)
-        os.makedirs("/opt/airflow/dbt/final_project_pipeline/seeds", exist_ok=True)
-        df.to_csv("/opt/airflow/dbt/final_project_pipeline/seeds/raw_linkedin_jobs.csv", index=False)
+        os.makedirs("/opt/airflow/dbt/job_pipeline/seeds", exist_ok=True)
+        df.to_csv("/opt/airflow/dbt/job_pipeline/seeds/raw_linkedin_jobs.csv", index=False)
         print("Saved to seeds folder.")
     else:
         print("No jobs found.")
 
 
 def delete_seed_csv():
-    seed_file = "/opt/airflow/dbt/final_project_pipeline/seeds/raw_linkedin_jobs.csv"
+    seed_file = "/opt/airflow/dbt/job_pipeline/seeds/raw_linkedin_jobs.csv"
     if os.path.exists(seed_file):
         os.remove(seed_file)
         print("Deleted seed file.")
@@ -61,17 +60,17 @@ with DAG(
 
     seed_task = BashOperator(
         task_id="dbt_seed",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt seed --profiles-dir /opt/airflow/dbt"
+        bash_command="cd /opt/airflow/dbt/job_pipeline && poetry run dbt seed --profiles-dir /opt/airflow/dbt"
     )
 
     run_task = BashOperator(
         task_id="dbt_run",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt run --profiles-dir /opt/airflow/dbt"
+        bash_command="cd /opt/airflow/dbt/job_pipeline && poetry run dbt run --profiles-dir /opt/airflow/dbt"
     )
 
     test_task = BashOperator(
         task_id="dbt_test",
-        bash_command="cd /opt/airflow/dbt/final_project_pipeline && poetry run dbt test --profiles-dir /opt/airflow/dbt"
+        bash_command="cd /opt/airflow/dbt/job_pipeline && poetry run dbt test --profiles-dir /opt/airflow/dbt"
     )
 
     cleanup_task = PythonOperator(

@@ -1,7 +1,8 @@
 version: 2
 
+
 models:
-  - name: courses_cleaned
+  - name: cleaned_courses
     description: "Filtered and validated courses scraped from Coursera, tagged with skills for job-role-based recommendations."
     columns:
       - name: title
@@ -32,3 +33,4 @@ models:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 3000
+              

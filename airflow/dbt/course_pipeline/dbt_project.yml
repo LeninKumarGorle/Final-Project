@@ -2,11 +2,11 @@
 # Name your project! Project names should contain only lowercase characters
 # and underscores. A good package name should reflect your organization's
 # name or the intended use of these models
-name: 'final_project_pipeline'
+name: 'course_pipeline'
 version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
-profile: 'final_project_pipeline'
+profile: 'course_pipeline'
 
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
@@ -30,21 +30,14 @@ clean-targets:         # directories to be removed by `dbt clean`
 # directory as views. These settings can be overridden in the individual model
 # files using the `{{ config(...) }}` macro.
 models:
-  final_project_pipeline:
+  course_pipeline:
     # Config indicated by + and applies to all files under models/example/
-    staging:
-      +materialized: view
-      snowflake_warehouse: final_project_wh
     marts:
       +materialized: table
       snowflake_warehouse: final_project_wh
 
 seeds:
-  final_project_pipeline:
+  course_pipeline:
     raw_courses:
-      quote_columns: false
-      snowflake_warehouse: FINAL_PROJECT_WH
-
-    raw_linkedin_jobs:
       quote_columns: false
       snowflake_warehouse: FINAL_PROJECT_WH
