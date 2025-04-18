@@ -90,71 +90,103 @@ https://shorturl.at/shNyk
 
 ## Prerequisites
 ```
--Python 3.10+
--Docker installed and running
--Docker Compose installed
--AWS S3 bucket with credentials
--OpenAI API key
--Pinecone API key
--Streamlit installed
--FastAPI framework
--Tavilly API Key
+- Python 3.10+
+- Docker installed and running
+- Docker Compose installed
+- AWS S3 bucket with credentials (Access Key & Secret Key)
+- Snowflake account with database/schema/role access
+- OpenAI API key
+- Pinecone API key and index set up
+- Streamlit installed (pip install streamlit)
+- FastAPI framework (pip install fastapi uvicorn)
+- Reddit API credentials for asyncpraw (Client ID & Secret)
+- JWT secret key for token generation
+- PyMuPDF installed (pip install PyMuPDF)
+- Selenium with appropriate web driver (e.g., ChromeDriver)
+- LeetScrape module or equivalent scraping logic configured
+- CrewAI framework installed (pip install crewai)
+- DBT CLI installed and configured
+- Airflow set up for pipeline scheduling
+- dotenv for managing environment variables (pip install python-dotenv)
 ```
 
 ## Set Up the Environment
 ```sh
 # Clone the repository
-git clone https://github.com/BigDataIA-Spring25-Team-6/Assignment05-Part01.git
-cd DAMG7245-Assignment05-Part-01.git
+git clone https://github.com/BigDataIA-Spring25-Team-6/Final-Project.git
+cd YourProjectRepo
 
-# Create and activate a virtual environment
-python -m venv venv
-venv\Scripts\activate     # On Windows
-# source venv/bin/activate  # On macOS/Linux
+# Ensure Python 3.10+ is installed
 
-# Install Python dependencies
-pip install -r requirements.txt
+# Install Poetry (if not already installed)
+# Follow: https://python-poetry.org/docs/#installation
+# Or use the command below:
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Set Poetry to not create virtualenvs outside the project (optional)
+poetry config virtualenvs.in-project true
+
+# Install project dependencies
+poetry install
+
+# Activate the virtual environment
+# (Use the appropriate path based on your OS and Poetry config)
+poetry shell
 
 # Set up environment variables
-# Create a .env file with your AWS, Pinecone, and OpenAI credentials
+# Create a .env file at the project root with the following:
+# - AWS_ACCESS_KEY_ID
+# - AWS_SECRET_ACCESS_KEY
+# - OPENAI_API_KEY
+# - PINECONE_API_KEY
+# - PINECONE_ENVIRONMENT
+# - SNOWFLAKE_USER, SNOWFLAKE_PASSWORD, SNOWFLAKE_ACCOUNT, etc.
+# - REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET
+# - JWT_SECRET
 
 # Run FastAPI backend (inside /api folder)
 cd api
-uvicorn fastapi_backend:app --host 0.0.0.0 --port 8000 --reload
+poetry run uvicorn fastapi_backend:app --host 0.0.0.0 --port 8000 --reload
 
 # Run Streamlit frontend (in a new terminal, inside /frontend folder)
 cd ../frontend
-streamlit run streamlit_app.py
+poetry run streamlit run streamlit_app.py
 
-# Optional: Run using Docker Compose from root directory
+# Optional: Run the entire system using Docker Compose from root directory
 docker-compose up --build
+
 
 ```
 
 ## Project Structure
 
 ```
+FINAL-PROJECT/
 
-ASSIGNMENT05-PART-01/
+├── airflow/                         # Airflow DAGs, configs, logs, and custom scripts
+│   ├── config/                      # Airflow configuration files
+│   ├── dags/                        # DAG definitions
+│   ├── dbt/                         # DBT models and seeds for transformations
+│   ├── logs/                        # Airflow task logs
+│   ├── plugins/                    # Airflow plugins
+│   ├── scripts/                    # Custom Python scripts used by Airflow tasks
+│   └── __pycache__/                # Compiled Python cache
 
-├── api/                 # FastAPI backend
- ├── Dockerfile          # Docker file for backend to build and deploy
- ├── .dockerignore       # Docker ignore file to ignore the unnecessary files          
- ├── requirements.txt    # backend dependencies
+├── backend/                         # Backend application logic
+│   ├── agents/                     # Modular AI agents (FAQAgent, MockInterviewAgent, etc.)
+│   ├── api/                        # FastAPI route handlers
+│   ├── data_processing/           # Reddit scraping, chunking, Pinecone integration
+│   ├── utils/                      # Utility modules and helper functions
+│   └── __init__.py                 # Package initializer
 
-├── data_prep/           # Data processing scripts (chunking, RAG)
+├── frontend/                        # Streamlit frontend for user interaction
+│   ├── scripts/                    # Streamlit helper logic
+│   └── pyproject.toml             # Frontend project definition (Poetry)
 
-├── frontend/            # Streamlit frontend
- ├── Dockerfile          # Docker file for frontend to build and deploy
- ├── .dockerignore       # Docker ignore file to ignore the unnecessary files
- ├── requirements.txt    # frontend dependencies
+├── .gitignore                            # gitignore file
 
-├── .dockerignore        # Docker ignore file
 
-├── .gitignore           # Git ignore file
 
-├── docker-compose.yaml  # Docker file to locally deploy
 
-├── requirements.txt     # Dependencies file
 
 ```
