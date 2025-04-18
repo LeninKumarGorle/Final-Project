@@ -29,3 +29,6 @@ debug.log
 # AWS Credentials & Secrets
 .env
 .aws/
+
+poetry.lock
+profiles.yml
