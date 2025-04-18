@@ -2,6 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app/backend
 
+ENV PYTHONPATH="/app/backend"
+
 ENV POETRY_HOME="/opt/poetry"
 ENV PATH="${POETRY_HOME}/bin:${PATH}"
 ENV POETRY_VERSION="2.1.2"
