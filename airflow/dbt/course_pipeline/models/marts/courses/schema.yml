@@ -1,0 +1,36 @@
+version: 2
+
+
+models:
+  - name: cleaned_courses
+    description: "Filtered and validated courses scraped from Coursera, tagged with skills for job-role-based recommendations."
+    columns:
+      - name: title
+        description: "The title of the Coursera course."
+        tests:
+          - not_null
+
+      - name: url
+        description: "The Coursera course URL."
+        tests:
+          - not_null
+
+      - name: skills
+        description: "Skills that the user gains from completing the course."
+        tests:
+          - not_null
+
+      - name: rating
+        description: "Average course rating as shown on Coursera, on a scale of 0 to 5."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 4.5
+
+      - name: reviews
+        description: "The number of user reviews the course has received."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 3000
+              
