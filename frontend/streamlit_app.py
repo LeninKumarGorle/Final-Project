@@ -11,6 +11,7 @@ import requests
 from scripts.pdf_helper import create_pdf
 import markdown
 import html
+from streamlit_ace import st_ace
 
 # Load environment variables
 load_dotenv()
@@ -35,7 +36,7 @@ ROLES = ["Data Analyst", "Data Engineer", "Software Engineer", "Machine Learning
 COMPANIES = ["Meta", "Apple", "Amazon", "Netflix", "Google"]
 PAGES = ["Home","Prepare for Interview", "Mock Interview", "Q and A"]
 
-FASTAPI_URL = "http://localhost:8010"
+FASTAPI_URL = "http://localhost:8000"
 
 # ----------------- Helpers -----------------
 def hash_password(password):
@@ -404,101 +405,201 @@ def main_app(username):
 
         elif st.session_state.active_page =="Mock Interview":
             
-            for key in ["interview_mode", "interview_transcript", "interview_started", "interview_done", "last_question", "evaluation_result"]:
+            for key in ["interview_mode", "interview_transcript", "interview_started", "interview_done", "last_question", "evaluation_result", "oa_state_initialized"]:
                 if key not in st.session_state:
-                    st.session_state[key] = None if key == "interview_mode" else [] if key == "interview_transcript" else False if key in ["interview_started", "interview_done"] else ""
+                    st.session_state[key] = (None if key == "interview_mode" else
+                                             [] if key == "interview_transcript" else
+                                             False if key in ["interview_started", "interview_done", "oa_state_initialized"] else "")
 
             resume_s3_path = "s3://team6-final-project/resumes/markdown/FILE_resume.md"
             if not st.session_state.interview_started:
-                st.session_state.interview_mode = st.selectbox("Choose Interview Mode", ["Behavioral", "Resume"], key="mode_selector")
+                st.session_state.interview_mode = st.selectbox("Choose Interview Mode", ["Behavioral", "Resume", "Practice OA"], key="mode_selector")
                 st.markdown(f"### You are now starting a **{st.session_state.interview_mode}** interview.")
                 if st.button("Start Interview"):
-                    with st.spinner("Initializing interview..."):
-                        payload = {
-                            "mode": st.session_state.interview_mode,
-                            "role": role,
-                            "previous_question": "start",
-                            "user_answer": "",
-                            "resume_s3_path": resume_s3_path
-                        }
-                        if st.session_state.interview_mode == "Behavioral":
-                            st.session_state.last_question = "Hi there! Let's begin your behavioral interview. Can you tell me about yourself?"
-                        elif st.session_state.interview_mode == "Resume":
-                            st.session_state.last_question = "Welcome to the resume-based interview. Walk me through your most recent project and your role in it."
-                        else:
-                            response = requests.post(f"{FASTAPI_URL}/generates_next_question/", json=payload)
-                            print(response.json())
-                            st.session_state.last_question = response.json()["next_question"]
-                        st.session_state.interview_transcript = []
+                    if st.session_state.interview_mode == "Practice OA":
+                        for key in ["topic_selected", "oa_session_state", "response", "feedback", "code", "started"]:
+                            st.session_state[key] = "array" if key == "topic_selected" else {} if key == "oa_session_state" else "" if key in ["response", "feedback", "code"] else False
+                        st.session_state.oa_state_initialized = True
                         st.session_state.interview_started = True
-                        st.session_state.interview_done = False
                         st.rerun()
-            if st.session_state.interview_started:
-                    st.markdown("### Interview Chat")
-                    for i, (q, a) in enumerate(st.session_state.interview_transcript):
-                        message_func(f"Q{i+1}:  {q}", is_user=False)
-                        #cleaned_ans = unicodedata.normalize("NFKD", a.strip())
-                        message_func(a.strip(), is_user=True)
-
-                    if not st.session_state.interview_done:
-                        message_func(f"Q{len(st.session_state.interview_transcript)+1}: {st.session_state.last_question}", is_user=False)
-                        # with st.chat_message("assistant"):
-                        #     st.markdown(f"**Q{len(st.session_state.interview_transcript)+1}:** {st.session_state.last_question}")
-
-                        user_input = st.chat_input("Your answer...")
-                        if user_input:
-
-                            #cleaned_input = unicodedata.normalize("NFKD", user_input.strip())
-                            st.session_state.interview_transcript.append((st.session_state.last_question, user_input.strip()))
-
-                            if len(st.session_state.interview_transcript) >= MAX_QUESTIONS:
-                                st.session_state.interview_done = True
-                                st.rerun()
+                    else:
+                        with st.spinner("Initializing interview..."):
+                            payload = {
+                                "mode": st.session_state.interview_mode,
+                                "role": role,
+                                "previous_question": "start",
+                                "user_answer": "",
+                                "resume_s3_path": resume_s3_path
+                            }
+                            if st.session_state.interview_mode == "Behavioral":
+                                st.session_state.last_question = "Hi there! Let's begin your behavioral interview. Can you tell me about yourself?"
+                            elif st.session_state.interview_mode == "Resume":
+                                st.session_state.last_question = "Welcome to the resume-based interview. Walk me through your most recent project and your role in it."
                             else:
-                                payload = {
-                                    "mode": st.session_state.interview_mode,
-                                    "role": role,
-                                    "company": company,
-                                    "previous_question": st.session_state.last_question,
-                                    "user_answer": user_input.strip(),
-                                    "resume_s3_path": resume_s3_path
-                                }
                                 response = requests.post(f"{FASTAPI_URL}/generates_next_question/", json=payload)
                                 print(response.json())
-                                print("printing response")
                                 st.session_state.last_question = response.json()["next_question"]
-                                st.rerun()
-                    if st.session_state.interview_done and not st.session_state.evaluation_result:
-                        st.success("✅ Interview complete! Click below to get your evaluation.")
-                        if st.button("Evaluate Interview"):
-                            with st.spinner("Evaluating your responses..."):
-                                payload = {
-                                    "transcript": st.session_state.interview_transcript,
-                                    "role": role,
-                                    "mode": st.session_state.interview_mode
+                            st.session_state.interview_transcript = []
+                            st.session_state.interview_started = True
+                            st.session_state.interview_done = False
+                            st.rerun()
+            if st.session_state.interview_started:
+                    if st.session_state.interview_mode == "Practice OA":
+                        
+                        TOPICS = ["array", "string", "hash-table", "dynamic-programming", "greedy", "tree", "two-pointers", "sliding-window", "graph", "linked-list", "stack", "queue"]
+                        topic = st.selectbox("Select a topic", TOPICS, index=TOPICS.index(st.session_state.topic_selected))
+                        if topic != st.session_state.topic_selected:
+                            st.session_state.topic_selected = topic
+                            st.session_state.response = ""
+                            st.session_state.feedback = ""
+                            st.session_state.code = ""
+                        col1, col2 = st.columns([1, 1])
+                        with col1:
+                            if st.button("Start Topic"):
+                                st.session_state.started = True
+                                st.session_state.oa_session_state = {
+                                    "topic": topic,
+                                    "index": 0,
+                                    "state": "waiting_for_code",
+                                    "skipped": []
                                 }
-                                print(f"payload is {payload}")
-                                print(f"transcript is {payload['transcript']}")
-
-                                result = requests.post(f"{FASTAPI_URL}/evaluates_interview/", json=payload)
-                                st.session_state.evaluation_result = result.json()["evaluation_report"]
+                                st.session_state.response = ""
+                                st.session_state.feedback = ""
+                                st.session_state.code = ""
+                                res = requests.post(f"{FASTAPI_URL}/oa-session/", json={
+                                    "user_input": topic,
+                                    "session_state": st.session_state.oa_session_state
+                                })
+                                data = res.json()
+                                print(data)
+                                st.session_state.response = data.get("question_text", "")
+                                if isinstance(st.session_state.response, dict):
+                                    st.session_state.response = st.session_state.response.get("question_text", "")
+                                st.session_state.code = data.get("code_stub", "# Write your solution here")
+                                st.session_state.oa_session_state = data.get("session_state", {})
                                 st.rerun()
-            if st.session_state.evaluation_result:
-                st.markdown("### Evaluation Report")
-                #st.text_area("Evaluation Report", st.session_state.evaluation_result, height=300)
-                render_evaluation_box(st.session_state.evaluation_result)
-                pdf_bytes = create_pdf(st.session_state.evaluation_result)
-                st.download_button(
-                    label="Download Evaluation Report",
-                    data=pdf_bytes,
-                    file_name="evaluation_report.pdf",
-                    mime="application/pdf"
-                )
-                if st.button("Start New Interview"):
-                    for key in ["interview_mode", "interview_transcript", "interview_started", "interview_done", "last_question", "evaluation_result"]:
-                        if key in st.session_state:
-                            del st.session_state[key]
-                    st.rerun()
+                        with col2:
+                            if st.button("Next Question", disabled=not st.session_state.get("started", False)):
+                                st.session_state.feedback = ""
+                                res = requests.post(f"{FASTAPI_URL}/oa-session/", json={
+                                "user_input": "next",
+                                "session_state": st.session_state.oa_session_state
+                                })
+                                data = res.json()
+                                st.session_state.response = data.get("question_text", "")
+                                if isinstance(st.session_state.response, dict):
+                                    st.session_state.response = st.session_state.response.get("question_text", "")
+                                st.session_state.code = data.get("code_stub", "")
+                                st.session_state.oa_session_state = data.get("session_state", {})
+                                st.rerun()
+                        
+                        if isinstance(st.session_state.response, str) and st.session_state.response.strip():
+                            st.markdown("### Question")
+                            st.markdown(st.session_state.response)
+                            code = st_ace(
+                            value=st.session_state.code or "# Write your solution here",
+                            language="python",
+                            theme="monokai",
+                            height=500,
+                            key=f"editor-{st.session_state.oa_session_state.get('index', 0)}",
+                            auto_update=True
+                            )
+                            if st.button("Submit Solution"):
+                                if not code.strip():
+                                    st.warning("Your code is empty. Please write something before submitting.")
+                                else:
+                                    st.session_state.code = code
+                                    if st.session_state.oa_session_state.get("state") == "waiting_for_code":
+                                        st.session_state.oa_session_state["state"] = "waiting_for_next"
+                                    res = requests.post(f"{FASTAPI_URL}/oa-session/", json={
+                                            "user_input": "",
+                                            "code": code,
+                                            "problem": st.session_state.response,
+                                            "session_state": st.session_state.oa_session_state
+                                        })
+                                    data = res.json()
+                                    feedback = data.get("question_text", "")
+                                    if isinstance(feedback, dict):
+                                        feedback = feedback.get("question_text", "")
+
+                                    if "Type 'next'" in feedback:
+                                        st.session_state.feedback = feedback
+                                    else:
+                                        st.session_state.response = feedback
+                                        st.session_state.feedback = ""
+                                    st.session_state.oa_session_state = data.get("session_state", {})
+                                    st.rerun()
+                            if st.session_state.feedback:
+                                st.markdown("### Feedback")
+                                st.markdown(st.session_state.feedback)
+                        else:
+                            st.warning("No question loaded yet. Please click 'Start Topic' or 'Next Question'.")
+                    else:   
+                        st.markdown("### Interview Chat")
+                        for i, (q, a) in enumerate(st.session_state.interview_transcript):
+                            message_func(f"Q{i+1}:  {q}", is_user=False)
+                            #cleaned_ans = unicodedata.normalize("NFKD", a.strip())
+                            message_func(a.strip(), is_user=True)
+
+                        if not st.session_state.interview_done:
+                            message_func(f"Q{len(st.session_state.interview_transcript)+1}: {st.session_state.last_question}", is_user=False)
+                            # with st.chat_message("assistant"):
+                            #     st.markdown(f"**Q{len(st.session_state.interview_transcript)+1}:** {st.session_state.last_question}")
+
+                            user_input = st.chat_input("Your answer...")
+                            if user_input:
+
+                                #cleaned_input = unicodedata.normalize("NFKD", user_input.strip())
+                                st.session_state.interview_transcript.append((st.session_state.last_question, user_input.strip()))
+
+                                if len(st.session_state.interview_transcript) >= MAX_QUESTIONS:
+                                    st.session_state.interview_done = True
+                                    st.rerun()
+                                else:
+                                    payload = {
+                                        "mode": st.session_state.interview_mode,
+                                        "role": role,
+                                        "company": company,
+                                        "previous_question": st.session_state.last_question,
+                                        "user_answer": user_input.strip(),
+                                        "resume_s3_path": resume_s3_path
+                                    }
+                                    response = requests.post(f"{FASTAPI_URL}/generates_next_question/", json=payload)
+                                    print(response.json())
+                                    print("printing response")
+                                    st.session_state.last_question = response.json()["next_question"]
+                                    st.rerun()
+                        if st.session_state.interview_done and not st.session_state.evaluation_result:
+                            st.success("✅ Interview complete! Click below to get your evaluation.")
+                            if st.button("Evaluate Interview"):
+                                with st.spinner("Evaluating your responses..."):
+                                    payload = {
+                                        "transcript": st.session_state.interview_transcript,
+                                        "role": role,
+                                        "mode": st.session_state.interview_mode
+                                    }
+                                    print(f"payload is {payload}")
+                                    print(f"transcript is {payload['transcript']}")
+
+                                    result = requests.post(f"{FASTAPI_URL}/evaluates_interview/", json=payload)
+                                    st.session_state.evaluation_result = result.json()["evaluation_report"]
+                                    st.rerun()
+                    if st.session_state.evaluation_result:
+                        st.markdown("### Evaluation Report")
+                        #st.text_area("Evaluation Report", st.session_state.evaluation_result, height=300)
+                        render_evaluation_box(st.session_state.evaluation_result)
+                        pdf_bytes = create_pdf(st.session_state.evaluation_result)
+                        st.download_button(
+                            label="Download Evaluation Report",
+                            data=pdf_bytes,
+                            file_name="evaluation_report.pdf",
+                            mime="application/pdf"
+                        )
+                        if st.button("Start New Interview"):
+                            for key in ["interview_mode", "interview_transcript", "interview_started", "interview_done", "last_question", "evaluation_result"]:
+                                if key in st.session_state:
+                                    del st.session_state[key]
+                            st.rerun()
         
         elif st.session_state.active_page == "Q and A":
             if "qa_query" not in st.session_state:

@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, UploadFile, Form
+from fastapi import FastAPI, UploadFile, Form, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -45,7 +45,7 @@ class EvaluationInput(BaseModel):
     role: str
     mode: str
 
-@app.post("/oa-session")
+@app.post("/oa-session/")
 def oa_session(request: OASessionRequest):
     print("USER INPUT:", request.user_input)
     print("SESSION STATE:", request.session_state)
