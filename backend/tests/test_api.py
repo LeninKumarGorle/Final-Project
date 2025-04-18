@@ -7,7 +7,7 @@ from utils.resume_summarizer import generate_resume_summary
 
 client = TestClient(app)
 
-@patch("run_oa_session")
+@patch("agents.crew_config.run_oa_session")
 def test_oa_session(mock_oa):
     mock_oa.return_value = {"response": "ok"}
     payload = {
@@ -20,8 +20,8 @@ def test_oa_session(mock_oa):
     assert res.status_code == 200
     assert res.json()["response"] == "ok"
 
-@patch("run_recommendation_pipeline")
-@patch("your_module.generate_pdf_report_with_details")
+@patch("agents.crew_config.run_recommendation_pipeline")
+@patch("utils.pdf_utils.generate_pdf_report_with_details")
 def test_analyze_resume(mock_pdf, mock_pipeline):
     mock_pipeline.return_value = {
         "summary": "Summary here",
@@ -43,7 +43,7 @@ def test_analyze_resume(mock_pdf, mock_pipeline):
     assert "summary" in res.json()
     assert "pdf_base64" in res.json()
 
-@patch("run_faq_pipeline")
+@patch("agents.crew_config.run_faq_pipeline")
 def test_faq_success(mock_faq):
     mock_faq.return_value = {"status": "success", "answer": "sample"}
     payload = {"query": "What is CI?", "role": "DevOps", "company": "Google"}
@@ -52,7 +52,7 @@ def test_faq_success(mock_faq):
     assert res.status_code == 200
     assert res.json()["status"] == "success"
 
-@patch("run_faq_pipeline")
+@patch("agents.crew_config.run_faq_pipeline")
 def test_faq_failure(mock_faq):
     mock_faq.return_value = {"status": "error", "message": "Failed"}
     payload = {"query": "What is CI?", "role": "DevOps", "company": "Google"}
@@ -60,8 +60,8 @@ def test_faq_failure(mock_faq):
     res = client.post("/faq", json=payload)
     assert res.status_code == 400
 
-@patch("generate_next_question")
-@patch("generate_resume_summary")
+@patch("api.fastapi_backend.generate_next_question")
+@patch("api.fastapi_backend.generate_resume_summary")
 def test_generate_next_question_resume_mode(mock_summary, mock_next):
     mock_summary.return_value = "Resume Summary"
     mock_next.return_value = "What is Docker?"
@@ -78,7 +78,7 @@ def test_generate_next_question_resume_mode(mock_summary, mock_next):
     assert res.status_code == 200
     assert res.json()["next_question"] == "What is Docker?"
 
-@patch("evaluate_interview")
+@patch("api.fastapi_backend.evaluate_interview")
 def test_evaluate_interview(mock_eval):
     mock_eval.return_value = "Strong candidate"
 
@@ -92,8 +92,8 @@ def test_evaluate_interview(mock_eval):
     assert res.status_code == 200
     assert "evaluation_report" in res.json()
 
-@patch("run_interview_orchestration_pipeline")
-@patch("generate_resume_summary")
+@patch("agents.crew_config.run_interview_orchestration_pipeline")
+@patch("utils.resume_summarizer.generate_resume_summary")
 def test_generates_next_question_resume_mode(mock_summary, mock_pipeline):
     mock_summary.return_value = "Summary"
     mock_pipeline.return_value = "What is system design?"
