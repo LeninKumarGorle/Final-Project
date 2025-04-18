@@ -39,16 +39,12 @@ models:
       +materialized: table
       snowflake_warehouse: final_project_wh
 
-# seeds:
-#   DBT:
-#     # Config indicated by + and applies to all files under seeds/example/
-#     jobs:
-#      schema: RAW
-#      quote_columns: false
-#      snowflake_warehouse: FINAL_PROJECT_WH
- 
 seeds:
   final_project_pipeline:
+    raw_courses:
+      quote_columns: false
+      snowflake_warehouse: FINAL_PROJECT_WH
+
     raw_linkedin_jobs:
       quote_columns: false
       snowflake_warehouse: FINAL_PROJECT_WH

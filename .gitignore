@@ -32,5 +32,4 @@ debug.log
 
 profiles.yml
 
-# Poetry files
 poetry.lock

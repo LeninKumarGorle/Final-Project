@@ -1,18 +1,17 @@
 [project]
-name = "final-project"
+name = "leetscrape-poc"
 version = "0.1.0"
-description = "final-project"
+description = ""
 authors = [
-    {name = "aditi"}
+    {name = "Lenin Kumar Gorle",email = "gorle.l@northeastern.edu"}
 ]
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "streamlit (>=1.44.1,<2.0.0)",
-    "requests (>=2.32.3,<3.0.0)",
-    "selenium (>=4.31.0,<5.0.0)",
     "streamlit-code-editor (>=0.1.22,<0.2.0)",
     "leetscrape (>=1.0.1,<2.0.0)",
+    "numpy (==1.26.4)"
 ]
 
 
