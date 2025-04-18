@@ -30,5 +30,7 @@ debug.log
 .env
 .aws/
 
-poetry.lock
 profiles.yml
+
+# Poetry files
+poetry.lock

@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: data_store
+    database: FINAL_PROJECT
+    schema: DATA_STORE
+    tables:
+      - name: raw_linkedin_jobs
+        description: "Raw LinkedIn job scraping data from Python pipeline"
+
+models:
+  - name: stg_linkedin_jobs
+    description: "Staging model for cleaning LinkedIn job data"
+    columns:
+      - name: job_url
+        tests:
+          - not_null
+
+  - name: cleaned_linkedin_jobs
+    description: "Final validated LinkedIn job data"
+    columns:
+      - name: job_title
+        tests:
+          - not_null
+      - name: job_url
+        tests:
+          - not_null
+          - unique
