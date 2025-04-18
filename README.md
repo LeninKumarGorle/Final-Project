@@ -163,13 +163,20 @@ docker-compose up --build
 ```
 FINAL-PROJECT/
 
+├── .github/
+│   └── workflows/                   # GitHub Actions for CI/CD
+
+├── POC/                             # Proof-of-concept experiments and prototypes
+
 ├── airflow/                         # Airflow DAGs, configs, logs, and custom scripts
 │   ├── config/                      # Airflow configuration files
 │   ├── dags/                        # DAG definitions
 │   ├── dbt/                         # DBT models and seeds for transformations
+│   ├── huggingface_cache/          # Local cache for transformers/embeddings
 │   ├── logs/                        # Airflow task logs
-│   ├── plugins/                    # Airflow plugins
-│   ├── scripts/                    # Custom Python scripts used by Airflow tasks
+│   ├── pinecone-sdk/               # Pinecone SDK integration or utilities
+│   ├── plugins/                    # Airflow custom plugins
+│   ├── scripts/                    # Custom Python scripts used by Airflow DAGs
 │   └── __pycache__/                # Compiled Python cache
 
 ├── backend/                         # Backend application logic
@@ -177,16 +184,15 @@ FINAL-PROJECT/
 │   ├── api/                        # FastAPI route handlers
 │   ├── data_processing/           # Reddit scraping, chunking, Pinecone integration
 │   ├── utils/                      # Utility modules and helper functions
-│   └── __init__.py                 # Package initializer
+│   ├── __init__.py                 # Package initializer
+│   └── pyproject.toml             # Poetry project file for backend
 
 ├── frontend/                        # Streamlit frontend for user interaction
 │   ├── scripts/                    # Streamlit helper logic
-│   └── pyproject.toml             # Frontend project definition (Poetry)
+│   └── pyproject.toml             # Poetry project file for frontend
 
-├── .gitignore                            # gitignore file
+├── leetscrape_service/             # Microservice or module for scraping LeetCode-like questions
 
-
-
-
+├── .gitignore                       # Git ignore rules
 
 ```
