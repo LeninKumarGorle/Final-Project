@@ -10,10 +10,10 @@ RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=$POETRY_HOME pytho
     && chmod a+x /opt/poetry/bin/poetry \
     && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
-COPY backend/pyproject.toml backend/poetry.lock ./
+COPY backend/pyproject.toml ./
 
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+    && poetry update --no-interaction --no-ansi
 
 COPY backend /app/backend
 
