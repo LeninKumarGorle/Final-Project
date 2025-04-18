@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-WORKDIR /app
+WORKDIR /app/backend
 
 ENV POETRY_HOME="/opt/poetry"
 ENV PATH="${POETRY_HOME}/bin:${PATH}"
@@ -23,8 +23,8 @@ COPY backend/pyproject.toml ./
 RUN poetry config virtualenvs.create false \
     && poetry update --no-interaction --no-ansi
 
-COPY backend /app/backend
+COPY backend/. /app/backend/
 
 EXPOSE 8000
 
-CMD ["poetry","run","uvicorn", "backend.api.fastapi_backend:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["poetry","run","uvicorn", "api.fastapi_backend:app", "--host", "0.0.0.0", "--port", "8000"]
