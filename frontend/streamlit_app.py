@@ -23,13 +23,13 @@ MAX_QUESTIONS = 7
 
 # Snowflake credentials from .env
 SNOWFLAKE_CONFIG = {
-    "user": st.secrets["snowflake"]["user"],
-    "password": st.secrets["snowflake"]["password"],
-    "account": st.secrets["snowflake"]["account"],
-    "warehouse": st.secrets["snowflake"]["warehouse"],
-    "database": st.secrets["snowflake"]["database"],
-    "schema": st.secrets["snowflake"]["schema"],
-    "role": st.secrets["snowflake"]["role"]
+    "user": st.secrets["SNOWFLAKE_USER"],
+    "password": st.secrets["SNOWFLAKE_PASSWORD"],
+    "account": st.secrets["SNOWFLAKE_ACCOUNT"],
+    "warehouse": st.secrets["SNOWFLAKE_WAREHOUSE"],
+    "database": st.secrets["SNOWFLAKE_DATABASE"],
+    "schema": st.secrets["SNOWFLAKE_SCHEMA"],
+    "role": st.secrets["SNOWFLAKE_ROLE"],
 }
 
 ROLES = ["Data Analyst", "Data Engineer", "Software Engineer", "Machine Learning Engineer", "Data Scientist", "AI Engineer"]
