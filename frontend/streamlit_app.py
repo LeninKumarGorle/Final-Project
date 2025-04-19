@@ -355,6 +355,7 @@ def main_app(username):
 
         if st.sidebar.button(page, use_container_width=True, key=f"nav_{page}", type=button_type, disabled=disabled):
             st.session_state.active_page = page
+            st.rerun()
 
     st.sidebar.markdown("---")
     if st.sidebar.button("Logout"):
